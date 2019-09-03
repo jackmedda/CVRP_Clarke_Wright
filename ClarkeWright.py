@@ -21,7 +21,7 @@ def main():
                 #savings.sort(key=lambda e: e[1], reverse=True)
                 savings.sort()
                 routes = parallel_CVRP(vehicles, deposit, customers, distances, savings)
-                fileprint(routes, deposit, customers, vehicles)
+                fileprint(filename, routes, deposit, customers, vehicles)
 
 
 def compute_savings(deposit, customers):
@@ -147,24 +147,22 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings):
     return routes
 
 
-def fileprint(routes, deposit, customers, vehicles):
-    for output in files:
-        if output:
-            with open(output[:-4] + "out" + output[-4:], "w") as file:
-                file.write("PROBLEM DETAILS:\n")
-                file.write("Customers = " + str(customers.__len__()) + '\n')
-                file.write("Max Load = " +str(deposit[3]) + '\n')
-                file.write("Max Cost = 999999999999999\n\n")
-                file.write("SOLUTION DETAILS:\n")
-                file.write("Total Cost = " + str(sum(i["Cost"] for i in routes)) + '\n')
-                file.write("Routes Of the Solution = " + str(vehicles) + '\n\n')
-                for c, r in enumerate(routes):
-                    file.write("ROUTE " + str(c) + ':\n')
-                    file.write("Cost = " + str(r["Cost"]) + '\n')
-                    file.write("Delivery Load = " + str(r["Delivery Load"]) + '\n')
-                    file.write("Pick-Up Load = " + str(r["Pick-up Load"]) + '\n')
-                    file.write("Customers in Route = " + str(r["Customers in Route"]) + '\n')
-                    file.write("Vertex Sequence :\n" + " ".join([str(x) for x in r["Vertex Sequence"]]) + '\n\n')
+def fileprint(output, routes, deposit, customers, vehicles):
+    with open(output[:-4] + "out" + output[-4:], "w") as file:
+        file.write("PROBLEM DETAILS:\n")
+        file.write("Customers = " + str(customers.__len__()) + '\n')
+        file.write("Max Load = " +str(deposit[3]) + '\n')
+        file.write("Max Cost = 999999999999999\n\n")
+        file.write("SOLUTION DETAILS:\n")
+        file.write("Total Cost = " + str(sum(i["Cost"] for i in routes)) + '\n')
+        file.write("Routes Of the Solution = " + str(vehicles) + '\n\n')
+        for c, r in enumerate(routes):
+            file.write("ROUTE " + str(c) + ':\n')
+            file.write("Cost = " + str(r["Cost"]) + '\n')
+            file.write("Delivery Load = " + str(r["Delivery Load"]) + '\n')
+            file.write("Pick-Up Load = " + str(r["Pick-up Load"]) + '\n')
+            file.write("Customers in Route = " + str(r["Customers in Route"]) + '\n')
+            file.write("Vertex Sequence :\n" + " ".join([str(x) for x in r["Vertex Sequence"]]) + '\n\n')
 
 
 def dist(xA, yA, xB, yB):
