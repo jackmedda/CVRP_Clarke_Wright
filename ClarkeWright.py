@@ -1,25 +1,27 @@
 from math import sqrt, pow
+import os
 
-filename = 'C:\\Users\\Giacomo\\Desktop\\University\\Magistrale Informatica\\1 ANNO\\DS\\I19\\Instanze simmetriche CVRPB\\Instances\\A1.txt'
-#filename = input()
-output = 'A1out.txt'
+filespath = 'C:\\Users\\Giacomo\\Desktop\\University\\Magistrale Informatica\\1 ANNO\\DS\\I19\\Instanze simmetriche CVRPB\\Instances'
+files = [(x if x[-3:] == "txt" and x != "info.txt" else None) for x in os.listdir(filespath)]
 
 def main():
 
-    with open(filename, 'r') as file:
-        n_customers = int(file.readline())
-        file.readline()
-        vehicles = int(file.readline())
-        deposit = list(map(int, file.readline().split('   ')))
-        customers = []
-        for i in range(n_customers):
-            customers.append(list(map(int, file.readline().split('   '))))
+    for filename in files:
+        if filename:
+            with open(filespath + "\\" + filename, 'r') as file:
+                n_customers = int(file.readline())
+                file.readline()
+                vehicles = int(file.readline())
+                deposit = list(map(int, file.readline().split('   ')))
+                customers = []
+                for i in range(n_customers):
+                    customers.append(list(map(int, file.readline().split('   '))))
 
-        savings, distances = compute_savings(deposit, customers)
-        #savings.sort(key=lambda e: e[1], reverse=True)
-        savings.sort()
-        routes = parallel_CVRP(vehicles, deposit, customers, distances, savings)
-        fileprint(routes, deposit, customers, vehicles)
+                savings, distances = compute_savings(deposit, customers)
+                #savings.sort(key=lambda e: e[1], reverse=True)
+                savings.sort()
+                routes = parallel_CVRP(vehicles, deposit, customers, distances, savings)
+                fileprint(routes, deposit, customers, vehicles)
 
 
 def compute_savings(deposit, customers):
@@ -146,21 +148,23 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings):
 
 
 def fileprint(routes, deposit, customers, vehicles):
-    with open(output, "w") as file:
-        file.write("PROBLEM DETAILS:\n")
-        file.write("Customers = " + str(customers.__len__()) + '\n')
-        file.write("Max Load = " +str(deposit[3]) + '\n')
-        file.write("Max Cost = 999999999999999\n\n")
-        file.write("SOLUTION DETAILS:\n")
-        file.write("Total Cost = " + str(sum(i["Cost"] for i in routes)) + '\n')
-        file.write("Routes Of the Solution = " + str(vehicles) + '\n\n')
-        for c, r in enumerate(routes):
-            file.write("ROUTE " + str(c) + ':\n')
-            file.write("Cost = " + str(r["Cost"]) + '\n')
-            file.write("Delivery Load = " + str(r["Delivery Load"]) + '\n')
-            file.write("Pick-Up Load = " + str(r["Pick-up Load"]) + '\n')
-            file.write("Customers in Route = " + str(r["Customers in Route"]) + '\n')
-            file.write("Vertex Sequence :\n" + " ".join([str(x) for x in r["Vertex Sequence"]]) + '\n\n')
+    for output in files:
+        if output:
+            with open(output[:-4] + "out" + output[-4:], "w") as file:
+                file.write("PROBLEM DETAILS:\n")
+                file.write("Customers = " + str(customers.__len__()) + '\n')
+                file.write("Max Load = " +str(deposit[3]) + '\n')
+                file.write("Max Cost = 999999999999999\n\n")
+                file.write("SOLUTION DETAILS:\n")
+                file.write("Total Cost = " + str(sum(i["Cost"] for i in routes)) + '\n')
+                file.write("Routes Of the Solution = " + str(vehicles) + '\n\n')
+                for c, r in enumerate(routes):
+                    file.write("ROUTE " + str(c) + ':\n')
+                    file.write("Cost = " + str(r["Cost"]) + '\n')
+                    file.write("Delivery Load = " + str(r["Delivery Load"]) + '\n')
+                    file.write("Pick-Up Load = " + str(r["Pick-up Load"]) + '\n')
+                    file.write("Customers in Route = " + str(r["Customers in Route"]) + '\n')
+                    file.write("Vertex Sequence :\n" + " ".join([str(x) for x in r["Vertex Sequence"]]) + '\n\n')
 
 
 def dist(xA, yA, xB, yB):
