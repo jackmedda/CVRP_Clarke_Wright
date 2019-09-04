@@ -4,8 +4,8 @@ import os
 filespath = 'C:\\Users\\Giacomo\\Desktop\\University\\Magistrale Informatica\\1 ANNO\\DS\\I19\\Instanze simmetriche CVRPB\\Instances'
 files = [(x if x[-3:] == "txt" and x != "info.txt" else None) for x in os.listdir(filespath)]
 
-def main():
 
+def main():
     for filename in files:
         if filename:
             with open(filespath + "\\" + filename, 'r') as file:
@@ -14,13 +14,21 @@ def main():
                 vehicles = int(file.readline())
                 deposit = list(map(int, file.readline().split('   ')))
                 customers = []
+                backhauls = 0
                 for i in range(n_customers):
                     customers.append(list(map(int, file.readline().split('   '))))
+                    if customers[i][2] == 0:
+                        backhauls += 1
 
                 savings, distances = compute_savings(deposit, customers)
-                #savings.sort(key=lambda e: e[1], reverse=True)
-                savings.sort()
-                routes = parallel_CVRP(vehicles, deposit, customers, distances, savings)
+                """
+                if filename == "A1.txt":
+                    for x in distances:
+                        print(x)
+                        print("\n")
+                        """
+                savings.sort(key=lambda e: e[1], reverse=True)
+                routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
                 fileprint(filename, routes, deposit, customers, vehicles)
 
 
@@ -42,7 +50,7 @@ def compute_savings(deposit, customers):
     return savings, distances
 
 
-def parallel_CVRP(vehicles, deposit, customers, distances, savings):
+def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
     routes = []
 
     for i in range(1, customers.__len__()+1):
@@ -70,7 +78,7 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings):
                     tail = True
                     continue
                 # new_route[0] is a linehaul? or s[0][0] is a backhaul
-                elif customers[routes[new_route[0]]["Vertex Sequence"][-2]][2] != 0 or customers[s[0][0]][2] == 0:
+                elif customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or customers[s[0][0]-1][2] == 0:
                     new_route = (new_route[0], c)
                     break
                 else:
@@ -80,24 +88,24 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings):
                     break
 
             if r["Vertex Sequence"][-2] == s[0][0] and not first and not head:
-                if customers[s[0][0]][2] != 0: # only if linehaul
-                    if not new_route:
-                        new_route = (c, -1)
-                        first = True
-                        head = True
+                # if customers[s[0][0]-1][2] != 0: # only if linehaul
+                if not new_route:
+                    new_route = (c, -1)
+                    first = True
+                    head = True
+                    """
                     else:
                         new_route = (c, new_route[1])
                         break
                     """
-                    elif customers[routes[new_route[1]]["Vertex Sequence"][1]][2] == 0 or customers[s[0][0]][2] != 0:
-                        new_route = (c, new_route[1])
-                        break
-                    else:
-                        # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
-                        new_route = (new_route[1], new_route[1])
-                        new_route = (new_route[0], c)
-                        break
-                    """
+                elif customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][0]-1][2] != 0:
+                    new_route = (c, new_route[1])
+                    break
+                else:
+                    # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
+                    new_route = (new_route[1], new_route[1])
+                    new_route = (new_route[0], c)
+                    break
 
             if r["Vertex Sequence"][1] == s[0][1] and not second and not tail:
                 if not new_route:
@@ -106,7 +114,7 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings):
                     tail = True
                     continue
                 # new_route[0] is a linehaul? or s[0][1] is a backhaul
-                elif customers[routes[new_route[0]]["Vertex Sequence"][-2]][2] != 0 or customers[s[0][1]][2] == 0:
+                elif customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or customers[s[0][1]-1][2] == 0:
                     new_route = (new_route[0], c)
                     break
                 else:
@@ -115,24 +123,31 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings):
                     break
 
             if r["Vertex Sequence"][-2] == s[0][1] and not second and not head:
-                if customers[s[0][1]][2] != 0: # only if linehaul
-                    if not new_route:
-                        new_route = (c, -1)
-                        second = True
-                        head = True
+                #if customers[s[0][1]-1][2] != 0: # only if linehaul
+                if not new_route:
+                    new_route = (c, -1)
+                    second = True
+                    head = True
+                    """
                     else:
                         new_route = (c, new_route[1])
-                        break
-                    """ in case "if customers[s[0][1]][2] != 0" is not present
-                    elif customers[routes[new_route[1]]["Vertex Sequence"][1]][2] == 0 or customers[s[0][1]] != 0:
-                        new_route = (c, new_route[1])
-                        break
-                    else:
-                        # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
-                        new_route = (new_route[1], new_route[1])
-                        new_route = (new_route[0], c)
                         break
                     """
+                    # in case "if customers[s[0][1]][2] != 0" is not present
+                elif customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][1]-1][2] != 0:
+                    new_route = (c, new_route[1])
+                    break
+                else:
+                    # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
+                    new_route = (new_route[1], new_route[1])
+                    new_route = (new_route[0], c)
+                    break
+
+        if customers[s[0][0]-1][2] == 0 or customers[s[0][1]-1][2] == 0:
+            backhauls -= 1
+        elif not routes.__len__() - backhauls > vehicles:
+            continue
+
         if new_route:
             if routes[new_route[0]]["Delivery Load"] + routes[new_route[1]]["Delivery Load"] < deposit[3] and \
                     routes[new_route[0]]["Pick-up Load"] + routes[new_route[1]]["Pick-up Load"] < deposit[3]:
