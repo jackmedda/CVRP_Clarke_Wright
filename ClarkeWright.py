@@ -27,7 +27,7 @@ def main():
                         print(x)
                         print("\n")
                         """
-                if filename == "B3.txt":
+                if filename == "N6.txt":
                     print("cazzo")
                 savings.sort(key=lambda e: e[1], reverse=True)
                 routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
@@ -54,6 +54,7 @@ def compute_savings(deposit, customers):
 
 def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
     routes = []
+    linehauls = customers.__len__() - backhauls
 
     for i in range(1, customers.__len__()+1):
         routes.append({
@@ -64,9 +65,7 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
             "Vertex Sequence": [0, i, 0]
         })
 
-    print("ciao")
-
-    for s in savings:
+    for x, s in enumerate(savings):
         if routes.__len__() == vehicles:
             break
         new_route = None
@@ -80,15 +79,24 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                     continue
                 # new_route[0] is a linehaul? or s[0][0] is a backhaul
                 else:
-                    new_route = (new_route[1], -1) if new_route[0] == -1 else new_route
-                    if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or customers[s[0][0]-1][2] == 0:
-                        new_route = (new_route[0], c)
-                        break
-                    elif customers[r["Vertex Sequence"][1]-1][2] == 0 or customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0:
-                        # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
-                        new_route = (new_route[0], new_route[0])
-                        new_route = (c, new_route[0])
-                        break
+                    if new_route[0] == -1:
+                        if r["Vertex Sequence"].__len__() != 3: # the other is unitary
+                            new_route = (new_route[1], -1)
+                            if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or \
+                                    customers[s[0][0]-1][2] == 0:
+                                new_route = (new_route[0], c)
+                                break
+                    else:
+                        if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or \
+                                customers[s[0][0]-1][2] == 0:
+                            new_route = (new_route[0], c)
+                            break
+                        elif r["Vertex Sequence"].__len__() == 3 and \
+                                routes[new_route[0]]["Vertex Sequence"].__len__() == 3:
+                            # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
+                            new_route = (new_route[0], new_route[0])
+                            new_route = (c, new_route[0])
+                            break
 
             if r["Vertex Sequence"][-2] == s[0][0] and not first:
                 # if customers[s[0][0]-1][2] != 0: # only if linehaul
@@ -101,15 +109,23 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                         break
                     """
                 else:
-                    new_route = (-1, new_route[0]) if new_route[1] == -1 else new_route
-                    if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][0]-1][2] != 0:
-                        new_route = (c, new_route[1])
-                        break
-                    elif customers[r["Vertex Sequence"][1]-1][2] == 0 or customers[routes[new_route[1]]["Vertex Sequence"][-2]-1][2] != 0:
-                        # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
-                        new_route = (new_route[1], new_route[1])
-                        new_route = (new_route[1], c)
-                        break
+                    if new_route[1] == -1:
+                        if r["Vertex Sequence"].__len__() != 3:  # the other is unitary
+                            new_route = (-1, new_route[0])
+                            if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][0]-1][2] != 0:
+                                new_route = (c, new_route[1])
+                                break
+                    else:
+                        if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or \
+                                customers[s[0][0]-1][2] != 0:
+                            new_route = (c, new_route[1])
+                            break
+                        elif r["Vertex Sequence"].__len__() == 3 and \
+                                routes[new_route[1]]["Vertex Sequence"].__len__() == 3:
+                            # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
+                            new_route = (new_route[1], new_route[1])
+                            new_route = (new_route[1], c)
+                            break
 
             if r["Vertex Sequence"][1] == s[0][1] and not second:
                 if not new_route:
@@ -118,14 +134,23 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                     continue
                 # new_route[0] is a linehaul? or s[0][1] is a backhaul
                 else:
-                    new_route = (new_route[1], -1) if new_route[0] == -1 else new_route
-                    if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or customers[s[0][1]-1][2] == 0:
-                        new_route = (new_route[0], c)
-                        break
-                    elif customers[r["Vertex Sequence"][1]-1][2] == 0 or customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0:
-                        new_route = (new_route[0], new_route[0])
-                        new_route = (c, new_route[0])
-                        break
+                    if new_route[0] == -1:
+                        if r["Vertex Sequence"].__len__() != 3:  # the other is unitary
+                            new_route = (new_route[1], -1)
+                            if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or \
+                                    customers[s[0][1]-1][2] == 0:
+                                new_route = (new_route[0], c)
+                                break
+                    else:
+                        if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or \
+                                customers[s[0][1]-1][2] == 0:
+                            new_route = (new_route[0], c)
+                            break
+                        elif r["Vertex Sequence"].__len__() == 3 and \
+                                routes[new_route[0]]["Vertex Sequence"].__len__() == 3:
+                            new_route = (new_route[0], new_route[0])
+                            new_route = (c, new_route[0])
+                            break
 
             if r["Vertex Sequence"][-2] == s[0][1] and not second:
                 #if customers[s[0][1]-1][2] != 0: # only if linehaul
@@ -139,25 +164,47 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                     """
                     # in case "if customers[s[0][1]][2] != 0" is not present
                 else:
-                    new_route = (-1, new_route[0]) if new_route[1] == -1 else new_route
-                    if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][1]-1][2] != 0:
-                        new_route = (c, new_route[1])
-                        break
-                    elif customers[r["Vertex Sequence"][1]-1][2] == 0 or customers[routes[new_route[1]]["Vertex Sequence"][-2]-1][2] != 0:
-                        # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
-                        new_route = (new_route[1], new_route[1])
-                        new_route = (new_route[1], c)
-                        break
+                    if new_route[1] == -1:
+                        if r["Vertex Sequence"].__len__() != 3:  # the other is unitary
+                            new_route = (-1, new_route[0])
+                            if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or \
+                                    customers[s[0][1]-1][2] != 0:
+                                new_route = (c, new_route[1])
+                                break
+                    else:
+                        if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][1]-1][2] != 0:
+                            new_route = (c, new_route[1])
+                            break
+                        elif r["Vertex Sequence"].__len__() == 3 and \
+                                 routes[new_route[1]]["Vertex Sequence"].__len__() == 3:
+                            # 0-backhaul-linehaul-0 --> 0-linehaul-backhaul-0
+                            new_route = (new_route[1], new_route[1])
+                            new_route = (new_route[1], c)
+                            break
 
         if new_route:
             if new_route[0] != -1 and new_route[1] != -1:
-                if customers[s[0][0] - 1][2] == 0 or customers[s[0][1] - 1][2] == 0:
-                    backhauls -= 1
-                #elif not routes.__len__() - backhauls > vehicles:
-                 #   continue
 
                 if routes[new_route[0]]["Delivery Load"] + routes[new_route[1]]["Delivery Load"] < deposit[3] and \
                         routes[new_route[0]]["Pick-up Load"] + routes[new_route[1]]["Pick-up Load"] < deposit[3]:
+                    # if one of savings contains a pick up
+                    if customers[s[0][0] - 1][2] == 0 or customers[s[0][1] - 1][2] == 0:
+                        backhauls -= 1
+                    elif routes.__len__() - backhauls == vehicles:
+                        continue
+
+                    # in case new_route is (0-3-....-linehaul, backhaul-7-....-0)
+
+                    if (customers[s[0][0]-1][2] == 0 and customers[s[0][1]-1][2] != 0) or \
+                            (customers[s[0][0]-1][2] != 0 and customers[s[0][1]-1][2] == 0) or \
+                            (customers[s[0][0]-1][2] != 0 and customers[s[0][1]-1][2] != 0):
+                        if vehicles + linehauls + backhauls >= routes.__len__():
+                            linehauls -= 1
+                        else:
+                            backhauls += 1
+                            savings.append(savings.pop(x))
+                            continue
+
                     routes[new_route[0]]["Vertex Sequence"] = routes[new_route[0]]["Vertex Sequence"][:-1] + \
                                                               routes[new_route[1]]["Vertex Sequence"][1:]
                     routes[new_route[0]]["Cost"] += routes[new_route[1]]["Cost"] - s[1]
@@ -165,6 +212,10 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                     routes[new_route[0]]["Pick-up Load"] += routes[new_route[1]]["Pick-up Load"]
                     routes[new_route[0]]["Customers in Route"] += routes[new_route[1]]["Customers in Route"]
                     del routes[new_route[1]]
+
+                #else:
+                 #   for r in routes:
+
 
     return routes
 
