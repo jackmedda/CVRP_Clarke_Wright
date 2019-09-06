@@ -27,8 +27,9 @@ def main():
                         print(x)
                         print("\n")
                         """
-                if filename == "N6.txt":
+                if filename == "I2.txt":
                     print("cazzo")
+                print(filename)
                 savings.sort(key=lambda e: e[1], reverse=True)
                 routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
                 fileprint(filename, routes, deposit, customers, vehicles)
@@ -55,6 +56,7 @@ def compute_savings(deposit, customers):
 def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
     routes = []
     linehauls = customers.__len__() - backhauls
+    line_back = 0
 
     for i in range(1, customers.__len__()+1):
         routes.append({
@@ -80,7 +82,8 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                 # new_route[0] is a linehaul? or s[0][0] is a backhaul
                 else:
                     if new_route[0] == -1:
-                        if r["Vertex Sequence"].__len__() != 3: # the other is unitary
+                        if r["Vertex Sequence"].__len__() != 3 and \
+                                routes[new_route[1]]["Vertex Sequence"].__len__() == 3:
                             new_route = (new_route[1], -1)
                             if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or \
                                     customers[s[0][0]-1][2] == 0:
@@ -103,16 +106,14 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                 if not new_route:
                     new_route = (c, -1)
                     first = True
-                    """
-                    else:
-                        new_route = (c, new_route[1])
-                        break
-                    """
+                    continue
                 else:
                     if new_route[1] == -1:
-                        if r["Vertex Sequence"].__len__() != 3:  # the other is unitary
+                        if r["Vertex Sequence"].__len__() != 3 and \
+                                routes[new_route[0]]["Vertex Sequence"].__len__() == 3:
                             new_route = (-1, new_route[0])
-                            if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or customers[s[0][0]-1][2] != 0:
+                            if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or \
+                                    customers[s[0][0]-1][2] != 0:
                                 new_route = (c, new_route[1])
                                 break
                     else:
@@ -135,7 +136,8 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                 # new_route[0] is a linehaul? or s[0][1] is a backhaul
                 else:
                     if new_route[0] == -1:
-                        if r["Vertex Sequence"].__len__() != 3:  # the other is unitary
+                        if r["Vertex Sequence"].__len__() != 3 and \
+                                routes[new_route[1]]["Vertex Sequence"].__len__() == 3:
                             new_route = (new_route[1], -1)
                             if customers[routes[new_route[0]]["Vertex Sequence"][-2]-1][2] != 0 or \
                                     customers[s[0][1]-1][2] == 0:
@@ -157,15 +159,12 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                 if not new_route:
                     new_route = (c, -1)
                     second = True
-                    """
-                    else:
-                        new_route = (c, new_route[1])
-                        break
-                    """
+                    continue
                     # in case "if customers[s[0][1]][2] != 0" is not present
                 else:
                     if new_route[1] == -1:
-                        if r["Vertex Sequence"].__len__() != 3:  # the other is unitary
+                        if r["Vertex Sequence"].__len__() != 3 and \
+                                routes[new_route[0]]["Vertex Sequence"].__len__() == 3:
                             new_route = (-1, new_route[0])
                             if customers[routes[new_route[1]]["Vertex Sequence"][1]-1][2] == 0 or \
                                     customers[s[0][1]-1][2] != 0:
@@ -185,26 +184,7 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
         if new_route:
             if new_route[0] != -1 and new_route[1] != -1:
 
-                if routes[new_route[0]]["Delivery Load"] + routes[new_route[1]]["Delivery Load"] < deposit[3] and \
-                        routes[new_route[0]]["Pick-up Load"] + routes[new_route[1]]["Pick-up Load"] < deposit[3]:
-                    # if one of savings contains a pick up
-                    if customers[s[0][0] - 1][2] == 0 or customers[s[0][1] - 1][2] == 0:
-                        backhauls -= 1
-                    elif routes.__len__() - backhauls == vehicles:
-                        continue
-
-                    # in case new_route is (0-3-....-linehaul, backhaul-7-....-0)
-
-                    if (customers[s[0][0]-1][2] == 0 and customers[s[0][1]-1][2] != 0) or \
-                            (customers[s[0][0]-1][2] != 0 and customers[s[0][1]-1][2] == 0) or \
-                            (customers[s[0][0]-1][2] != 0 and customers[s[0][1]-1][2] != 0):
-                        if vehicles + linehauls + backhauls >= routes.__len__():
-                            linehauls -= 1
-                        else:
-                            backhauls += 1
-                            savings.append(savings.pop(x))
-                            continue
-
+                def merge_routes(s, new_route, routes):
                     routes[new_route[0]]["Vertex Sequence"] = routes[new_route[0]]["Vertex Sequence"][:-1] + \
                                                               routes[new_route[1]]["Vertex Sequence"][1:]
                     routes[new_route[0]]["Cost"] += routes[new_route[1]]["Cost"] - s[1]
@@ -213,9 +193,209 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                     routes[new_route[0]]["Customers in Route"] += routes[new_route[1]]["Customers in Route"]
                     del routes[new_route[1]]
 
-                #else:
-                 #   for r in routes:
+                if routes[new_route[0]]["Delivery Load"] + routes[new_route[1]]["Delivery Load"] <= deposit[3] and \
+                        routes[new_route[0]]["Pick-up Load"] + routes[new_route[1]]["Pick-up Load"] <= deposit[3]:
+                    # if one of savings contains a pick up
+                    less_back = False
+                    if customers[s[0][0] - 1][2] == 0 or customers[s[0][1] - 1][2] == 0:
+                        backhauls -= 1
+                        less_back = True
+                    elif routes.__len__() - backhauls == vehicles:
+                        continue
 
+                    # in case new_route is (0-3-....-linehaul, backhaul-7-....-0)
+                    if (customers[s[0][0]-1][2] == 0 and customers[s[0][1]-1][2] != 0) or \
+                            (customers[s[0][0]-1][2] != 0 and customers[s[0][1]-1][2] == 0):
+                        if line_back < vehicles:
+                            line_back += 1
+                            """
+                            if vehicles + linehauls + backhauls > routes.__len__():
+                                linehauls -= 1
+                            elif vehicles + linehauls + backhauls + 1 >= routes.__len__() and less_back:
+                                linehauls -= 1
+                            """
+                        else:
+                            if less_back:
+                                backhauls += 1
+                            savings.append(savings.pop(x))
+                            continue
+
+                    if customers[s[0][0] - 1][2] != 0 and customers[s[0][1] - 1][2] != 0:
+                        linehauls -= 1
+
+                    merge_routes(s, new_route, routes)
+
+                else:
+                    """
+                    if customers[s[0][0]-1][2] != 0: # if one is linehaul the other one is linehaul
+                        exceed = deposit[3] - routes[new_route[0]]["Delivery Load"] - routes[new_route[1]]["Delivery Load"]
+                        sacrifice = (-1, deposit[3], 1)
+                        for c, x in enumerate(routes[new_route[0]]["Vertex Sequence"][1:-2]):
+                            if customers[x-1][2] != 0 and x != s[0][0] and x != s[0][1]:
+                                # sacrifice = (0, c+1)
+                                if exceed <= customers[x-1][2] <= sacrifice[1]:
+                                    sacrifice = (0, customers[x-1][2], c + 1)
+                            else:
+                                break
+                        for c, x in enumerate(routes[new_route[1]]["Vertex Sequence"][1:-2]):
+                            # sacrifice = (1, c+1)
+                            if customers[x - 1][2] != 0 and x != s[0][0] and x != s[0][1]:
+                                if exceed <= customers[x-1][2] <= sacrifice[1]:
+                                    sacrifice = (1, customers[x-1][2], c + 1)
+
+                        if sacrifice[0] != -1:
+                            customer = routes[new_route[sacrifice[0]]]["Vertex Sequence"].pop(sacrifice[2])
+                            bef_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2]-1]
+                            after_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2]]
+                            final_cost = 0
+                            final_cost -= distances[bef_cust][customer] if bef_cust < customer else \
+                                distances[customer][bef_cust]
+                            final_cost -= distances[after_cust][customer] if after_cust < customer else \
+                                distances[customer][after_cust]
+                            final_cost += distances[bef_cust][after_cust] if bef_cust < after_cust else \
+                                distances[after_cust][bef_cust]
+                            routes[new_route[sacrifice[0]]]["Cost"] += final_cost
+                            routes[new_route[sacrifice[0]]]["Delivery Load"] -= customers[customer-1][2]
+                            routes[new_route[sacrifice[0]]]["Customers in Route"] -= 1
+                            routes.append({
+                                "Cost": distances[0][customer] * 2,
+                                "Delivery Load": customers[customer - 1][2],
+                                "Pick-up Load": customers[customer - 1][3],
+                                "Customers in Route": 1,
+                                "Vertex Sequence": [0, customer, 0]
+                            })
+
+                            merge_routes(s, new_route, routes)
+                    else:
+                        exceed = deposit[3] - routes[new_route[0]]["Pick-up Load"] - routes[new_route[1]]["Pick-up Load"]
+                        sacrifice = (0, deposit[3], -2)
+                        for c, x in enumerate(routes[new_route[0]]["Vertex Sequence"][-2:1]):
+                            if customers[x - 1][3] != 0 and x != s[0][0] and x != s[0][1]:
+                                # sacrifice = (0, c+1)
+                                if exceed <= customers[x - 1][3] <= sacrifice[1]:
+                                    sacrifice = (0, customers[x - 1][3], - c - 2)
+                            else:
+                                break
+                        for c, x in enumerate(routes[new_route[1]]["Vertex Sequence"][-2:1]):
+                            # sacrifice = (1, c+1)
+                            if customers[x - 1][2] != 0 and x != s[0][0] and x != s[0][1]:
+                                if exceed <= customers[x - 1][3] <= sacrifice[1]:
+                                    sacrifice = (1, customers[x - 1][3], - c - 2)
+
+                        if sacrifice[0] != -1:
+                            customer = routes[new_route[sacrifice[0]]]["Vertex Sequence"].pop(sacrifice[2])
+                            bef_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2]]
+                            after_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2] + 1]
+                            final_cost = 0
+                            final_cost -= distances[bef_cust][customer] if bef_cust < customer else \
+                                distances[customer][bef_cust]
+                            final_cost -= distances[after_cust][customer] if after_cust < customer else \
+                                distances[customer][after_cust]
+                            final_cost += distances[bef_cust][after_cust] if bef_cust < after_cust else \
+                                distances[after_cust][bef_cust]
+                            routes[new_route[sacrifice[0]]]["Cost"] += final_cost
+                            routes[new_route[sacrifice[0]]]["Pick-up Load"] -= customers[customer - 1][3]
+                            routes[new_route[sacrifice[0]]]["Customers in Route"] -= 1
+                            routes.append({
+                                "Cost": distances[0][customer] * 2,
+                                "Delivery Load": customers[customer - 1][2],
+                                "Pick-up Load": customers[customer - 1][3],
+                                "Customers in Route": 1,
+                                "Vertex Sequence": [0, customer, 0]
+                            })
+
+                            merge_routes(s, new_route, routes)
+                            """
+
+    while routes.__len__() != vehicles:
+        only_back = None
+        only_line = None
+        min_del_load = (0, 0)
+        min_pick_up_load = (0, 0)
+        for c, r in enumerate(routes):
+            min_del_load = (c, r["Delivery Load"]) if r["Delivery Load"] < min_del_load[1] and \
+                                                      r["Delivery Load"] != 0 and r["Pick-up Load"] != 0 \
+                                                      or (min_del_load[1] == 0 and r["Pick-up Load"] != 0) \
+                                                      else min_del_load
+            min_pick_up_load = (c, r["Pick-up Load"]) if r["Pick-up Load"] < min_pick_up_load[1] and \
+                                                         r["Pick-up Load"] != 0 and r["Delivery Load"] != 0 \
+                                                         or (min_pick_up_load[1] == 0 and r["Delivery Load"] != 0) \
+                                                         else min_pick_up_load
+            if r["Delivery Load"] == 0:
+                only_back = (c, r)
+            if r["Pick-up Load"] == 0:
+                only_line = (c, r)
+
+        if only_line:
+            c, line = only_line
+            cost = 0
+            delivery = 0
+            for i, v in enumerate(line["Vertex Sequence"][1:-1]):
+                cost += distances[line["Vertex Sequence"][i]][v] if line["Vertex Sequence"][i] < v \
+                        else distances[v][line["Vertex Sequence"][i]]
+                if customers[v - 1][2] + delivery + min_del_load[1] <= deposit[3]:
+                    delivery += customers[v-1][2]
+                else:
+                    break
+
+            # add values to min delivery route
+            min_head = routes[min_del_load[0]]["Vertex Sequence"][1]
+            min_head_cost = distances[min_head][line["Vertex Sequence"][i]] \
+                                                       if min_head < line["Vertex Sequence"][i] \
+                                                       else distances[line["Vertex Sequence"][i]][min_head]
+            routes[min_del_load[0]]["Cost"] += (cost + min_head_cost -
+                                                distances[0][routes[min_del_load[0]]["Vertex Sequence"][1]])
+            routes[min_del_load[0]]["Delivery Load"] += delivery
+            routes[min_del_load[0]]["Vertex Sequence"] = line["Vertex Sequence"][:(i+1)] + \
+                                                         routes[min_del_load[0]]["Vertex Sequence"][1:]
+            routes[min_del_load[0]]["Customers in Route"] += line["Vertex Sequence"][:(i+1)].__len__() - 1
+
+            # remove values from delivery only route
+            if routes[c]["Customers in Route"] - i < 3:
+                if c < min_pick_up_load[0]:
+                    min_pick_up_load = (min_pick_up_load[0] - 1, min_pick_up_load[1])
+                del routes[c]
+            else:
+                routes[c]["Cost"] += distances[0][routes[c]["Vertex Sequence"][i + 1]] - cost
+                routes[c]["Delivery Load"] -= delivery
+                routes[c]["Vertex Sequence"] = [0] + routes[c]["Vertex Sequence"][(i + 1):]
+                routes[c]["Customers in Route"] -= i
+
+        if only_back:
+            c, line = only_back
+            cost = 0
+            pick_up = 0
+            pick_up_line = line["Vertex Sequence"].copy()
+            pick_up_line.reverse()
+            pick_up_line = pick_up_line[1:-1]
+            for i, v in enumerate(pick_up_line):
+                cost += distances[line["Vertex Sequence"][-i - 1]][v] if line["Vertex Sequence"][-i - 1] < v \
+                    else distances[v][line["Vertex Sequence"][-i - 2]]
+                if customers[v-1][2] + pick_up + min_pick_up_load[1] <= deposit[3]:
+                    pick_up += customers[v-1][2]
+                else:
+                    break
+
+            # add values to min distance route (min distance from tail of pick_up only route)
+            min_tail = routes[min_pick_up_load[0]]["Vertex Sequence"][-2]
+            min_head_cost = distances[min_tail][line["Vertex Sequence"][-i - 2]] \
+                                                       if min_tail < line["Vertex Sequence"][-i - 2] \
+                                                       else distances[line["Vertex Sequence"][-i - 2]][min_tail]
+            routes[min_pick_up_load[0]]["Cost"] += (cost + min_head_cost -
+                                                    distances[0][routes[min_pick_up_load[0]]["Vertex Sequence"][-2]])
+            routes[min_pick_up_load[0]]["Pick-up Load"] += pick_up
+            routes[min_pick_up_load[0]]["Vertex Sequence"] = routes[min_pick_up_load[0]]["Vertex Sequence"][:-1] + \
+                                                        line["Vertex Sequence"][(-i - 2):]
+            routes[min_pick_up_load[0]]["Customers in Route"] += line["Vertex Sequence"][(-i - 2):].__len__() - 1
+
+            # remove values from pick-up only route
+            if routes[c]["Customers in Route"] - i < 3:
+                del routes[c]
+            else:
+                routes[c]["Cost"] += distances[0][routes[c]["Vertex Sequence"][-i - 3]] - cost
+                routes[c]["Pick-up Load"] -= pick_up
+                routes[c]["Vertex Sequence"] = routes[c]["Vertex Sequence"][:(-i - 2)] + [0]
+                routes[c]["Customers in Route"] -= (i + 1)
 
     return routes
 
