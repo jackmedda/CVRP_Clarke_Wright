@@ -21,15 +21,6 @@ def main():
                         backhauls += 1
 
                 savings, distances = compute_savings(deposit, customers)
-                """
-                if filename == "A1.txt":
-                    for x in distances:
-                        print(x)
-                        print("\n")
-                        """
-                if filename == "I2.txt":
-                    print("cazzo")
-                print(filename)
                 savings.sort(key=lambda e: e[1], reverse=True)
                 routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
                 fileprint(filename, routes, deposit, customers, vehicles)
@@ -155,7 +146,7 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                             break
 
             if r["Vertex Sequence"][-2] == s[0][1] and not second:
-                #if customers[s[0][1]-1][2] != 0: # only if linehaul
+                # if customers[s[0][1]-1][2] != 0: # only if linehaul
                 if not new_route:
                     new_route = (c, -1)
                     second = True
@@ -208,12 +199,6 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                             (customers[s[0][0]-1][2] != 0 and customers[s[0][1]-1][2] == 0):
                         if line_back < vehicles:
                             line_back += 1
-                            """
-                            if vehicles + linehauls + backhauls > routes.__len__():
-                                linehauls -= 1
-                            elif vehicles + linehauls + backhauls + 1 >= routes.__len__() and less_back:
-                                linehauls -= 1
-                            """
                         else:
                             if less_back:
                                 backhauls += 1
@@ -224,88 +209,6 @@ def parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls):
                         linehauls -= 1
 
                     merge_routes(s, new_route, routes)
-
-                else:
-                    """
-                    if customers[s[0][0]-1][2] != 0: # if one is linehaul the other one is linehaul
-                        exceed = deposit[3] - routes[new_route[0]]["Delivery Load"] - routes[new_route[1]]["Delivery Load"]
-                        sacrifice = (-1, deposit[3], 1)
-                        for c, x in enumerate(routes[new_route[0]]["Vertex Sequence"][1:-2]):
-                            if customers[x-1][2] != 0 and x != s[0][0] and x != s[0][1]:
-                                # sacrifice = (0, c+1)
-                                if exceed <= customers[x-1][2] <= sacrifice[1]:
-                                    sacrifice = (0, customers[x-1][2], c + 1)
-                            else:
-                                break
-                        for c, x in enumerate(routes[new_route[1]]["Vertex Sequence"][1:-2]):
-                            # sacrifice = (1, c+1)
-                            if customers[x - 1][2] != 0 and x != s[0][0] and x != s[0][1]:
-                                if exceed <= customers[x-1][2] <= sacrifice[1]:
-                                    sacrifice = (1, customers[x-1][2], c + 1)
-
-                        if sacrifice[0] != -1:
-                            customer = routes[new_route[sacrifice[0]]]["Vertex Sequence"].pop(sacrifice[2])
-                            bef_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2]-1]
-                            after_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2]]
-                            final_cost = 0
-                            final_cost -= distances[bef_cust][customer] if bef_cust < customer else \
-                                distances[customer][bef_cust]
-                            final_cost -= distances[after_cust][customer] if after_cust < customer else \
-                                distances[customer][after_cust]
-                            final_cost += distances[bef_cust][after_cust] if bef_cust < after_cust else \
-                                distances[after_cust][bef_cust]
-                            routes[new_route[sacrifice[0]]]["Cost"] += final_cost
-                            routes[new_route[sacrifice[0]]]["Delivery Load"] -= customers[customer-1][2]
-                            routes[new_route[sacrifice[0]]]["Customers in Route"] -= 1
-                            routes.append({
-                                "Cost": distances[0][customer] * 2,
-                                "Delivery Load": customers[customer - 1][2],
-                                "Pick-up Load": customers[customer - 1][3],
-                                "Customers in Route": 1,
-                                "Vertex Sequence": [0, customer, 0]
-                            })
-
-                            merge_routes(s, new_route, routes)
-                    else:
-                        exceed = deposit[3] - routes[new_route[0]]["Pick-up Load"] - routes[new_route[1]]["Pick-up Load"]
-                        sacrifice = (0, deposit[3], -2)
-                        for c, x in enumerate(routes[new_route[0]]["Vertex Sequence"][-2:1]):
-                            if customers[x - 1][3] != 0 and x != s[0][0] and x != s[0][1]:
-                                # sacrifice = (0, c+1)
-                                if exceed <= customers[x - 1][3] <= sacrifice[1]:
-                                    sacrifice = (0, customers[x - 1][3], - c - 2)
-                            else:
-                                break
-                        for c, x in enumerate(routes[new_route[1]]["Vertex Sequence"][-2:1]):
-                            # sacrifice = (1, c+1)
-                            if customers[x - 1][2] != 0 and x != s[0][0] and x != s[0][1]:
-                                if exceed <= customers[x - 1][3] <= sacrifice[1]:
-                                    sacrifice = (1, customers[x - 1][3], - c - 2)
-
-                        if sacrifice[0] != -1:
-                            customer = routes[new_route[sacrifice[0]]]["Vertex Sequence"].pop(sacrifice[2])
-                            bef_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2]]
-                            after_cust = routes[new_route[sacrifice[0]]]["Vertex Sequence"][sacrifice[2] + 1]
-                            final_cost = 0
-                            final_cost -= distances[bef_cust][customer] if bef_cust < customer else \
-                                distances[customer][bef_cust]
-                            final_cost -= distances[after_cust][customer] if after_cust < customer else \
-                                distances[customer][after_cust]
-                            final_cost += distances[bef_cust][after_cust] if bef_cust < after_cust else \
-                                distances[after_cust][bef_cust]
-                            routes[new_route[sacrifice[0]]]["Cost"] += final_cost
-                            routes[new_route[sacrifice[0]]]["Pick-up Load"] -= customers[customer - 1][3]
-                            routes[new_route[sacrifice[0]]]["Customers in Route"] -= 1
-                            routes.append({
-                                "Cost": distances[0][customer] * 2,
-                                "Delivery Load": customers[customer - 1][2],
-                                "Pick-up Load": customers[customer - 1][3],
-                                "Customers in Route": 1,
-                                "Vertex Sequence": [0, customer, 0]
-                            })
-
-                            merge_routes(s, new_route, routes)
-                            """
 
     while routes.__len__() != vehicles:
         only_back = None
