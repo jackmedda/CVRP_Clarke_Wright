@@ -1,5 +1,5 @@
 from math import sqrt, pow
-import os
+import os, time, random
 
 filespath = 'C:\\Users\\Giacomo\\Desktop\\University\\Magistrale Informatica\\1 ANNO\\DS\\I19\\Instanze simmetriche CVRPB\\Instances'
 files = [(x if x[-3:] == "txt" and x != "info.txt" else None) for x in os.listdir(filespath)]
@@ -16,23 +16,27 @@ def main():
                 deposit = list(map(int, file.readline().split('   ')))
                 customers = []
                 backhauls = 0
+
                 for i in range(n_customers):
                     customers.append(list(map(int, file.readline().split('   '))))
                     if customers[i][2] == 0:
                         backhauls += 1
+
                 savings, distances = compute_savings(deposit, customers)
                 savings.sort(key=lambda e: e[1], reverse=True)
-                print(filename)
-                if filename == "I2.txt":
-                    print()
+
                 while choice != 0 and choice != 1:
                     choice = int(input("0 -> Parallel Clarke & Wright\n"
                                    "1 -> Sequential Clarke & Wright\n"))
+                comp_time = time.perf_counter()
                 if choice == 0:
                     routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
                 else:
                     routes = sequential_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
-                fileprint(filename, routes, deposit, customers, vehicles)
+
+                comp_time = time.perf_counter() - comp_time
+
+                fileprint(filename, routes, deposit, customers, vehicles, comp_time)
 
 
 def compute_savings(deposit, customers):
@@ -248,9 +252,15 @@ def sequential_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
             "Customers in Route": 1,
             "Vertex Sequence": [0, i, 0]
         })
-    # controllare saving (63,1), trovare l'errore e correggere anche le modifiche nel codice in parallelo
-    for c, r in enumerate(routes):
-        for x, s in enumerate(savings):
+    random.shuffle(routes)
+
+    for c, rout in enumerate(routes):
+        r = rout
+        i = 0
+        while i != savings.__len__():
+            s = savings[i]
+            i += 1
+
             new_route = None
             snd_sav = -1
 
@@ -356,9 +366,11 @@ def sequential_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
                             if new_route[0] > new_route[1]:
                                 routes.insert(new_route[1], routes[new_route[0]-1])
                                 del routes[new_route[0]]
-                            del savings[x]
+                                r = routes[new_route[1]]
+                            del savings[i-1]
+                            i = 0
 
-    post_processing(routes, vehicles, customers, distances, deposit)
+    # post_processing(routes, vehicles, customers, distances, deposit)
 
     return routes
 
@@ -373,6 +385,7 @@ def merge_routes(s, new_route, routes):
     del routes[new_route[1]]
 
 
+"""
 def post_processing(routes, vehicles, customers, distances, deposit):
     while routes.__len__() != vehicles:
         cap_err = True
@@ -601,9 +614,10 @@ def post_processing(routes, vehicles, customers, distances, deposit):
                         distances[0][min_sacr_seq[1]] + dist_x_next)
                     routes[d]["Vertex Sequence"][1] = routes[min_sacr[0]]["Vertex Sequence"][1]
                     routes[min_sacr[0]]["Vertex Sequence"][1] = last_pick_up
+"""
 
 
-def fileprint(output, routes, deposit, customers, vehicles):
+def fileprint(output, routes, deposit, customers, vehicles, comp_time):
     with open(output[:-4] + "out" + output[-4:], "w") as file:
         file.write("PROBLEM DETAILS:\n")
         file.write("Customers = " + str(customers.__len__()) + '\n')
@@ -611,7 +625,8 @@ def fileprint(output, routes, deposit, customers, vehicles):
         file.write("Max Cost = 999999999999999\n\n")
         file.write("SOLUTION DETAILS:\n")
         file.write("Total Cost = " + str(sum(i["Cost"] for i in routes)) + '\n')
-        file.write("Routes Of the Solution = " + str(vehicles) + '\n\n')
+        file.write("Routes Of the Solution = " + str(vehicles) + '\n')
+        file.write("Computational Time = " + str(comp_time) + " s" '\n\n')
         for c, r in enumerate(routes):
             file.write("ROUTE " + str(c) + ':\n')
             file.write("Cost = " + str(r["Cost"]) + '\n')
