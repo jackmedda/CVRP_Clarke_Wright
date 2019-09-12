@@ -10,8 +10,10 @@ all_distances = {}
 filespath = 'C:\\Users\\Giacomo\\Desktop\\University\\Magistrale Informatica\\1 ANNO\\DS\\I19\\Instanze simmetriche CVRPB\\Instances'
 files_inst = [(x if x[-3:] == "txt" and x != "info.txt" else None) for x in os.listdir(filespath)]
 
+
 def dist(xA, yA, xB, yB):
     return sqrt( pow(xA-xB, 2) + pow(yA-yB, 2) )
+
 
 def compute_savings(deposit, customers):
     savings = [[]]
@@ -31,7 +33,6 @@ def compute_savings(deposit, customers):
     return savings, distances
 
 
-
 for filename in files_inst:
     if filename:
         with open(filespath + "\\" + filename, 'r') as file:
@@ -49,6 +50,7 @@ for filename in files_inst:
             savings, distances = compute_savings(deposit, customers)
             info_distances = distances
             all_distances[filename[:2]] = distances
+
 
 for f in files:
     if f:
