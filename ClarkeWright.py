@@ -7,36 +7,38 @@ files = [(x if x[-3:] == "txt" and x != "info.txt" else None) for x in os.listdi
 
 def main():
     choice = -1
-    for filename in files:
-        if filename:
-            with open(filespath + "\\" + filename, 'r') as file:
-                n_customers = int(file.readline())
-                file.readline()
-                vehicles = int(file.readline())
-                deposit = list(map(int, file.readline().split('   ')))
-                customers = []
-                backhauls = 0
+    # for filename in files:
+        #if filename:
+        #with open(filespath + "\\" + filename, 'r') as file:
+    filepath = input("Insert file path: ")
+    with open(filepath, 'r') as file:
+        n_customers = int(file.readline())
+        file.readline()
+        vehicles = int(file.readline())
+        deposit = list(map(int, file.readline().split('   ')))
+        customers = []
+        backhauls = 0
 
-                for i in range(n_customers):
-                    customers.append(list(map(int, file.readline().split('   '))))
-                    if customers[i][2] == 0:
-                        backhauls += 1
+        for i in range(n_customers):
+            customers.append(list(map(int, file.readline().split('   '))))
+            if customers[i][2] == 0:
+                backhauls += 1
 
-                savings, distances = compute_savings(deposit, customers)
-                savings.sort(key=lambda e: e[1], reverse=True)
+        savings, distances = compute_savings(deposit, customers)
+        savings.sort(key=lambda e: e[1], reverse=True)
 
-                while choice != 0 and choice != 1:
-                    choice = int(input("0 -> Parallel Clarke & Wright\n"
-                                   "1 -> Sequential Clarke & Wright\n"))
-                comp_time = time.perf_counter()
-                if choice == 0:
-                    routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
-                else:
-                    routes = sequential_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
+        while choice != 0 and choice != 1:
+            choice = int(input("0 -> Parallel Clarke & Wright\n"
+                           "1 -> Sequential Clarke & Wright\n"))
+        comp_time = time.perf_counter()
+        if choice == 0:
+            routes = parallel_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
+        else:
+            routes = sequential_CVRP(vehicles, deposit, customers, distances, savings, backhauls)
 
-                comp_time = time.perf_counter() - comp_time
+        comp_time = time.perf_counter() - comp_time
 
-                fileprint(filename, routes, deposit, customers, vehicles, comp_time)
+        fileprint(filepath.split('\\')[-1], routes, deposit, customers, vehicles, comp_time)
 
 
 def compute_savings(deposit, customers):
@@ -621,7 +623,7 @@ def fileprint(output, routes, deposit, customers, vehicles, comp_time):
     with open(output[:-4] + "out" + output[-4:], "w") as file:
         file.write("PROBLEM DETAILS:\n")
         file.write("Customers = " + str(customers.__len__()) + '\n')
-        file.write("Max Load = " +str(deposit[3]) + '\n')
+        file.write("Max Load = " + str(deposit[3]) + '\n')
         file.write("Max Cost = 999999999999999\n\n")
         file.write("SOLUTION DETAILS:\n")
         file.write("Total Cost = " + str(sum(i["Cost"] for i in routes)) + '\n')
